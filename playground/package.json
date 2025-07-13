@@ -20,7 +20,8 @@
   "scripts": {
     "test": "echo \"ahoj\"",
     "lint": "eslint",
-    "lint:fix": "eslint --fix"
+    "lint:fix": "eslint --fix",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@eslint/css": "^0.10.0",
