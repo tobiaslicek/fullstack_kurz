@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HTML Table</title>
+</head>
+<body>
+
+<h1>Seznam kontaktů</h1>
+
+<table id="data" border="1">
+    <caption>Kontaktní údaje</caption>
+    <thead>
+    <tr>
+        <th>Jméno</th>
+        <th>Příjmení</th>
+        <th>Email</th>
+        <th>Telefon</th>
+    </tr>
+    </thead>
+    <tbody>
+    </tbody>
+    <tfoot>
+    <tr>
+        <td colspan="4">Konec tabulky</td>
+    </tr>
+    </tfoot>
+</table>
+
+<h2>Přidat nový kontakt</h2>
+<form onsubmit="event.preventDefault(); addRow();">
+    <label for="first_name">Jméno:</label>
+    <input type="text" id="first_name" name="first_name" required><br>
+
+    <label for="last_name">Příjmení:</label>
+    <input type="text" id="last_name" name="last_name" required><br>
+
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required><br>
+
+    <label for="phone">Telefon:</label>
+    <input type="tel" id="phone" name="phone" required><br>
+
+    <button type="submit">Přidej řádek</button>
+</form>
+
+<script>
+    var addRow = () => {
+        const table = document.getElementById("data").querySelector("tbody");
+        const newRow = table.insertRow(-1);
+
+        ["phone", "email", "last_name", "first_name"].forEach((fieldName) => {
+            const newValue = document.getElementById(fieldName).value;
+            const newCell = newRow.insertCell(0);
+            let newText = document.createTextNode(newValue);
+            newCell.appendChild(newText);
+        });
+    };
+</script>
+</body>
+</html>
