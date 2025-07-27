@@ -15,18 +15,29 @@ tfoot {
   }
 }
 
-tbody tr {
+tbody {
+  tr {
+    border: none;
+
+    &:nth-child(odd) {
+      background-color: #000;
+      color: #fff;
+    }
+
+    &:hover {
+      background-color: #235550;
+      color: #c4d791;
+    }
+  }
+
+  td {
+    border: none;
+  }
+}
+
+thead th,
+tfoot td {
   border: none;
-
-  &:nth-child(odd) {
-    background-color: #000;
-    color: #fff;
-  }
-
-  &:hover {
-    background-color: #235550;
-    color: #c4d791;
-  }
 }
 
 caption {
