@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="cs">
+<head>
+    <meta charset="utf-8">
+    <title>Weather</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<h1>Počasí</h1>
+
+<form id="weather-form">
+    <label for="cities">Města (odděl čárkou nebo středníkem):</label>
+    <input id="cities" name="cities" type="text" required>
+    <button type="submit">Zobrazit</button>
+</form>
+
+<div id="results" aria-live="polite"></div>
+
+<script>
+    const form = document.getElementById('weather-form');
+    const input = document.getElementById('cities');
+    const results = document.getElementById('results');
+
+    const GEO_BASE = 'https://geocoding-api.open-meteo.com/v1/search';
+    const FORECAST_BASE = 'https://api.open-meteo.com/v1/forecast';
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        results.textContent = '';
+
+        const raw = (input.value || '').trim();
+        const tokens = raw.split(/[;,]/).map(s => s.trim()).filter(Boolean);
+
+        if (tokens.length === 0) {
+            return;
+        }
+
+        const unique = Array.from(new Set(tokens)).slice(0, 3);
+
+        try {
+            const forecasts = await Promise.all(unique.map(getCityForecastSafe));
+            const container = document.createElement('div');
+            forecasts.forEach(f => container.appendChild(renderResult(f)));
+            results.appendChild(container);
+        } catch (err) {
+            results.appendChild(renderMessage('Nastala neočekávaná chyba. Zkuste to prosím znovu.'));
+        }
+    });
+
+    async function getCityForecastSafe(cityName) {
+        try {
+            const geo = await geocodeCity(cityName);
+            if (!geo) {
+                return {city: cityName, error: 'Město nenalezeno.'};
+            }
+            const fc = await fetchForecast(geo.latitude, geo.longitude);
+            if (!fc) {
+                return {city: cityName, error: 'Předpověď se nepodařilo načíst.'};
+            }
+            return {
+                city: geo.name,
+                min: fc.min,
+                max: fc.max
+            };
+        } catch (_) {
+            return {city: cityName, error: 'Chyba při načítání dat.'};
+        }
+    }
+
+    async function geocodeCity(city) {
+        const u = new URL(GEO_BASE);
+        u.searchParams.set('name', city);
+        u.searchParams.set('count', '1');
+        u.searchParams.set('language', 'cs');
+
+        const res = await fetch(u.toString());
+        if (!res.ok) return null;
+
+        const data = await res.json();
+        if (!data || !Array.isArray(data.results) || data.results.length === 0) return null;
+
+        const r = data.results[0];
+        return {
+            name: r.name,
+            latitude: r.latitude,
+            longitude: r.longitude
+        };
+    }
+
+    async function fetchForecast(lat, lon) {
+        const u = new URL(FORECAST_BASE);
+        u.searchParams.set('latitude', String(lat));
+        u.searchParams.set('longitude', String(lon));
+        u.searchParams.set('daily', 'temperature_2m_min,temperature_2m_max');
+        u.searchParams.set('forecast_days', '1');
+        u.searchParams.set('timezone', 'auto');
+
+        const res = await fetch(u.toString());
+        if (!res.ok) return null;
+
+        const data = await res.json();
+        if (!data || !data.daily) return null;
+
+        const minArr = data.daily.temperature_2m_min;
+        const maxArr = data.daily.temperature_2m_max;
+
+        const min = Array.isArray(minArr) && minArr.length ? minArr[0] : null;
+        const max = Array.isArray(maxArr) && maxArr.length ? maxArr[0] : null;
+
+        if (min === null || max === null) return null;
+
+        return {min, max};
+    }
+
+    function renderResult(result) {
+        const el = document.createElement('div');
+        if (result.error) {
+            el.textContent = `${result.city}: ${result.error}`;
+        } else {
+            el.textContent = `${result.city}: min ${formatC(result.min)} / max ${formatC(result.max)}`;
+        }
+        return el;
+    }
+
+    function renderMessage(text) {
+        const el = document.createElement('div');
+        el.textContent = text;
+        return el;
+    }
+
+    function formatC(v) {
+        return `${Number(v).toFixed(1)} °C`;
+    }
+</script>
+</body>
+</html>
