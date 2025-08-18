@@ -36,14 +36,24 @@
             return;
         }
 
-        const unique = Array.from(new Set(tokens)).slice(0, 3);
+        const uniqueAll = Array.from(new Set(tokens));
+        const unique = uniqueAll.slice(0, 3);
+
+        if (uniqueAll.length > 3) {
+            const info = document.createElement('div');
+            const ignored = uniqueAll.slice(3);
+            info.textContent =
+                `Zadáno více než 3 města. Použita budou: ${unique.join(', ')}. ` +
+                `Ignorováno: ${ignored.join(', ')}.`;
+            results.appendChild(info);
+        }
 
         try {
             const forecasts = await Promise.all(unique.map(getCityForecastSafe));
             const container = document.createElement('div');
             forecasts.forEach(f => container.appendChild(renderResult(f)));
             results.appendChild(container);
-        } catch (err) {
+        } catch (_) {
             results.appendChild(renderMessage('Nastala neočekávaná chyba. Zkuste to prosím znovu.'));
         }
     });
@@ -52,65 +62,64 @@
         try {
             const geo = await geocodeCity(cityName);
             if (!geo) {
-                return {city: cityName, error: 'Město nenalezeno.'};
+                return { city: cityName, error: 'Město nenalezeno.' };
             }
             const fc = await fetchForecast(geo.latitude, geo.longitude);
             if (!fc) {
-                return {city: cityName, error: 'Předpověď se nepodařilo načíst.'};
+                return { city: geo.name, error: 'Předpověď se nepodařilo načíst.' };
             }
-            return {
-                city: geo.name,
-                min: fc.min,
-                max: fc.max
-            };
+            return { city: geo.name, min: fc.min, max: fc.max };
         } catch (_) {
-            return {city: cityName, error: 'Chyba při načítání dat.'};
+            return { city: cityName, error: 'Chyba při načítání dat.' };
         }
     }
 
     async function geocodeCity(city) {
-        const u = new URL(GEO_BASE);
-        u.searchParams.set('name', city);
-        u.searchParams.set('count', '1');
-        u.searchParams.set('language', 'cs');
+        try {
+            const u = new URL(GEO_BASE);
+            u.searchParams.set('name', city);
+            u.searchParams.set('count', '1');
+            u.searchParams.set('language', 'cs');
 
-        const res = await fetch(u.toString());
-        if (!res.ok) return null;
+            const res = await fetch(u.toString());
+            if (!res.ok) return null;
 
-        const data = await res.json();
-        if (!data || !Array.isArray(data.results) || data.results.length === 0) return null;
+            const data = await res.json();
+            if (!data || !Array.isArray(data.results) || data.results.length === 0) return null;
 
-        const r = data.results[0];
-        return {
-            name: r.name,
-            latitude: r.latitude,
-            longitude: r.longitude
-        };
+            const r = data.results[0];
+            return { name: r.name, latitude: r.latitude, longitude: r.longitude };
+        } catch (_) {
+            return null;
+        }
     }
 
     async function fetchForecast(lat, lon) {
-        const u = new URL(FORECAST_BASE);
-        u.searchParams.set('latitude', String(lat));
-        u.searchParams.set('longitude', String(lon));
-        u.searchParams.set('daily', 'temperature_2m_min,temperature_2m_max');
-        u.searchParams.set('forecast_days', '1');
-        u.searchParams.set('timezone', 'auto');
+        try {
+            const u = new URL(FORECAST_BASE);
+            u.searchParams.set('latitude', String(lat));
+            u.searchParams.set('longitude', String(lon));
+            u.searchParams.set('daily', 'temperature_2m_min,temperature_2m_max');
+            u.searchParams.set('forecast_days', '1');
+            u.searchParams.set('timezone', 'auto');
 
-        const res = await fetch(u.toString());
-        if (!res.ok) return null;
+            const res = await fetch(u.toString());
+            if (!res.ok) return null;
 
-        const data = await res.json();
-        if (!data || !data.daily) return null;
+            const data = await res.json();
+            if (!data || !data.daily) return null;
 
-        const minArr = data.daily.temperature_2m_min;
-        const maxArr = data.daily.temperature_2m_max;
+            const minArr = data.daily.temperature_2m_min;
+            const maxArr = data.daily.temperature_2m_max;
 
-        const min = Array.isArray(minArr) && minArr.length ? minArr[0] : null;
-        const max = Array.isArray(maxArr) && maxArr.length ? maxArr[0] : null;
+            const min = Array.isArray(minArr) && minArr.length ? minArr[0] : null;
+            const max = Array.isArray(maxArr) && maxArr.length ? maxArr[0] : null;
 
-        if (min === null || max === null) return null;
-
-        return {min, max};
+            if (min === null || max === null) return null;
+            return { min, max };
+        } catch (_) {
+            return null;
+        }
     }
 
     function renderResult(result) {
