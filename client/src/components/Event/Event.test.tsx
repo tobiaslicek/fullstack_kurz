@@ -9,11 +9,17 @@ describe("Event component", () => {
         id="1"
         title="Svatba"
         location="Hrad"
-        dates={[]}
+        dates={[
+          {
+            timestamp: new Date("2025-09-01").getTime(),
+            records: [],
+          },
+        ]}
       />
     );
     expect(screen.getByText("Svatba")).toBeInTheDocument();
     expect(screen.getByText(/Místo:/)).toBeInTheDocument();
+    expect(screen.getByText("Hrad")).toBeInTheDocument();
   });
 
   it("zobrazí hlášku při prázdném seznamu datumů", () => {
@@ -34,12 +40,21 @@ describe("Event component", () => {
               { name: "Kuba", answer: "no" },
             ],
           },
+          {
+            timestamp: new Date("2025-09-02").getTime(),
+            records: [{ name: "Tobiáš", answer: "if-needed" }],
+          },
         ]}
       />
     );
 
+    // Účastníci
     expect(screen.getByText("Tobiáš")).toBeInTheDocument();
+    expect(screen.getByText("Kuba")).toBeInTheDocument();
+
+    // Odpovědi
     expect(screen.getByText("✅")).toBeInTheDocument();
     expect(screen.getByText("❌")).toBeInTheDocument();
+    expect(screen.getByText("➖")).toBeInTheDocument();
   });
 });
