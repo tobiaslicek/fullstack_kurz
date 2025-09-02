@@ -1,5 +1,5 @@
 import { Link, Outlet } from "react-router-dom";
-import { PollingEvent } from "../../types";
+import type { PollingEvent } from "../../types";
 
 type Props = { data: PollingEvent[] };
 
