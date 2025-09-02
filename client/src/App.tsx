@@ -1,33 +1,22 @@
-import "./App.css";
-import Event from "./components/Event/Event";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Nav from "./components/Nav";
+import EventsList from "./components/Events/EventsList";
+import EventDetail from "./components/Events/EventDetail";
+import NewEventForm from "./components/Events/NewEventForm";
+import { eventsData } from "./data/events";
 
-function App() {
+export default function App() {
   return (
-    <div className="App">
-      <Event
-        id="1"
-        title="Grilování u Pavla"
-        location="Pardubice"
-        dates={[
-          {
-            timestamp: new Date("2025-09-01").getTime(),
-            records: [
-              { name: "Tobiáš", answer: "yes" },
-              { name: "Radim", answer: "if-needed" },
-            ],
-          },
-          {
-            timestamp: new Date("2025-09-02").getTime(),
-            records: [
-              { name: "Tobiáš", answer: "no" },
-              { name: "Radim", answer: "yes" },
-              { name: "Kuba", answer: "yes" },
-            ],
-          },
-        ]}
-      />
-    </div>
+    <BrowserRouter>
+      <Nav />
+      <Routes>
+        <Route path="/" element={<Navigate to="/events" replace />} />
+        <Route path="/events" element={<EventsList data={eventsData} />}>
+          <Route path=":id" element={<EventDetail />} />
+        </Route>
+        <Route path="/events/new" element={<NewEventForm />} />
+        <Route path="*" element={<div>404 – nic tu není</div>} />
+      </Routes>
+    </BrowserRouter>
   );
 }
-
-export default App;
