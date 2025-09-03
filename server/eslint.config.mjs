@@ -1,25 +1,26 @@
 import js from "@eslint/js";
-import tseslint from "@typescript-eslint/eslint-plugin";
-import tsparser from "@typescript-eslint/parser";
+import tseslint from "typescript-eslint";
 import stylistic from "@stylistic/eslint-plugin-js";
 
-/** @type {import('eslint').Linter.FlatConfig[]} */
-export default [
-    { ignores: ["dist/**"] },
+export default tseslint.config(
+    { ignores: ["dist/**", "node_modules/**"] },
+
+    js.configs.recommended,
+    ...tseslint.configs.recommended,
+
     {
-        files: ["**/*.ts"],
-        languageOptions: {
-            parser: tsparser,
-            parserOptions: { sourceType: "module", ecmaVersion: "latest" }
-        },
         plugins: {
-            "@typescript-eslint": tseslint,
-            "@stylistic/js": stylistic
+            "@stylistic/js": stylistic,
         },
         rules: {
-            ...js.configs.recommended.rules,
-            ...tseslint.configs.recommended.rules,
-            ...stylistic.configs["recommended-flat"].rules
-        }
+            "@stylistic/js/max-statements-per-line": ["warn", { max: 1 }],
+        },
+        languageOptions: {
+            parser: tseslint.parser,
+            parserOptions: {
+                ecmaVersion: "latest",
+                sourceType: "module",
+            },
+        },
     }
-];
+);
