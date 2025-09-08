@@ -1,0 +1,63 @@
+openapi: 3.1.0
+info:
+  title: Event API
+  version: 1.0.0
+  description: API pro správu událostí
+
+paths:
+  /events:
+    get:
+      summary: Získat seznam událostí
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
+    post:
+      summary: Vytvořit novou událost
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewEvent"
+      responses:
+        "201":
+          description: Vytvořeno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+
+components:
+  schemas:
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        location:
+          type: string
+        date:
+          type: string
+          format: date-time
+    NewEvent:
+      type: object
+      required:
+        - title
+        - location
+        - date
+      properties:
+        title:
+          type: string
+        location:
+          type: string
+        date:
+          type: string
+          format: date-time
