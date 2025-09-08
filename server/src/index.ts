@@ -1,5 +1,6 @@
 import express, { type Request, type Response } from "express";
 import cors from "cors";
+import { events as seedEvents, type PollingEvent } from "./data";
 
 const app = express();
 app.use(cors());
@@ -18,8 +19,7 @@ type NewEventBody = {
     dates: number[];
 };
 
-const events: PollingEvent[] = [
-];
+const events: PollingEvent[] = [...seedEvents];
 
 app.get("/api/events", (_req: Request, res: Response<{ items: PollingEvent[] }>) => {
     res.json({ items: events });

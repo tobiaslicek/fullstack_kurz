@@ -1,24 +1,30 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
 import EventsList from "../components/Events/EventsList";
-
-const data = [
-  { title: "Tým building", id: "1", location: "Praha", dates: [] },
-];
+import { mockFetch, ok, restoreFetch } from "./mockFetch";
 
 describe("EventsList", () => {
-  it("zobrazí list událostí a link na detail", () => {
-    render(
-      <MemoryRouter initialEntries={["/events"]}>
-        <Routes>
-          <Route path="/events" element={<EventsList data={data as any} />} />
-        </Routes>
-      </MemoryRouter>
-    );
+  beforeEach(() => {
+    mockFetch((url) => {
+      if (url.endsWith("/api/events")) {
+        return ok({
+          items: [
+            { id: 1, title: "Super akce", location: "Praha", dates: [] },
+            { id: 2, title: "Super akce 2", location: "Brno", dates: [] },
+          ],
+        });
+      }
+      return ok({});
+    });
+  });
+  afterEach(() => restoreFetch());
 
-    const list = screen.getByRole("list", { name: /Seznam událostí/i });
+  it("zobrazí list událostí a link na detail", async () => {
+    render(<EventsList />);
+
+    const list = await screen.findByRole("list", { name: /Seznam událostí/i });
     expect(list).toBeInTheDocument();
+
     expect(screen.getByRole("link", { name: /detail/i })).toHaveAttribute(
       "href",
       "/events/1"
